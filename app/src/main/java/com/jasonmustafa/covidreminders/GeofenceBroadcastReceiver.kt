@@ -7,7 +7,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.location.GeofencingEvent
 
-class GeofenceBroadcastReceiver: BroadcastReceiver() {
+class GeofenceBroadcastReceiver : BroadcastReceiver() {
     companion object {
         var notificationId = 1
     }
@@ -28,7 +28,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver() {
                         .setContentText("test content")
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-                with (NotificationManagerCompat.from(context)) {
+                with(NotificationManagerCompat.from(context)) {
                     notify(notificationId, builder.build())
                 }
 

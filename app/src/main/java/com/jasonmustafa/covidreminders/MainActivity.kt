@@ -11,9 +11,9 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         if (!checkPermissions()) {
             requestPermissions()
         } else {
-           // TODO
+            // TODO
         }
     }
 
