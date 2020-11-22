@@ -31,8 +31,6 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 with(NotificationManagerCompat.from(context)) {
                     notify(notificationId, builder.build())
                 }
-
-                notificationId++
             }
         }
     }
