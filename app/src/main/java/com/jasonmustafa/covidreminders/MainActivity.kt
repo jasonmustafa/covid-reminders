@@ -12,13 +12,21 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,6 +41,8 @@ class MainActivity : AppCompatActivity() {
 
     private val location0 = Location("")
     private lateinit var locations: Array<Location>
+    private lateinit var apiKey: String
+    private lateinit var placesClient: PlacesClient
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,18 +52,35 @@ class MainActivity : AppCompatActivity() {
         geofencingClient = LocationServices.getGeofencingClient(this)
         createNotificationChannel(this)
 
-        val setHomeLocationFab = findViewById<ExtendedFloatingActionButton>(R.id.set_home_location_fab)
+        val setHomeLocationFab =
+            findViewById<ExtendedFloatingActionButton>(R.id.set_home_location_fab)
 
         setHomeLocationFab.setOnClickListener {
             // TODO: open dialog to set home location
 
             println("fab clicked")
 
-            val dialog = SetHomeLocationDialogFragment()
-            dialog.show(supportFragmentManager, "test")
+            testPlacesDialog()
         }
 
-        // onCreate should end here
+        apiKey = getString(R.string.api_key)
+
+        if (!Places.isInitialized()) {
+            Places.initialize(applicationContext, apiKey)
+        }
+
+        println("api key:$apiKey")
+
+        // Create a new Places client instance.
+
+        // Create a new Places client instance.
+        placesClient = Places.createClient(this)
+
+        val autocompleteFragment = supportFragmentManager
+            .findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment
+        autocompleteFragment.view!!.visibility = View.GONE
+
+        // TODO: onCreate should end here
 
         // golden gate bridge
         location0.latitude = 37.8199
@@ -68,8 +95,10 @@ class MainActivity : AppCompatActivity() {
                     .setRequestId("home")
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     .setCircularRegion(location0.latitude, location0.longitude, 45F)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER
-                            or Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .setTransitionTypes(
+                        Geofence.GEOFENCE_TRANSITION_ENTER
+                                or Geofence.GEOFENCE_TRANSITION_EXIT
+                    )
                     .build()
         }
 
@@ -116,14 +145,16 @@ class MainActivity : AppCompatActivity() {
     private fun foregroundAndBackgroundLocationPermissionGranted(): Boolean {
         val foregroundLocationGranted = (
             PackageManager.PERMISSION_GRANTED
-                    == ActivityCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION))
+                    == ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ))
 
         val backgroundLocationGranted =
             if (runningQOrLater) {
                 PackageManager.PERMISSION_GRANTED ==
                         ActivityCompat.checkSelfPermission(
-                                this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
                         )
             } else {
                 true
@@ -155,9 +186,9 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(TAG, "Request location permissions")
         ActivityCompat.requestPermissions(
-                this@MainActivity,
-                permissions,
-                resultCode
+            this@MainActivity,
+            permissions,
+            resultCode
         )
     }
 
@@ -176,16 +207,18 @@ class MainActivity : AppCompatActivity() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(this@MainActivity,
-                            REQUEST_TURN_DEVICE_LOCATION_ON)
+                    exception.startResolutionForResult(
+                        this@MainActivity,
+                        REQUEST_TURN_DEVICE_LOCATION_ON
+                    )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings: " + sendEx.message)
                 }
             } else {
                 Snackbar.make(
-                        findViewById(R.id.activivy_main_layout),
-                        "Location services must be enabled to use this app.",
-                        Snackbar.LENGTH_INDEFINITE
+                    findViewById(R.id.activity_main_layout),
+                    "Location services must be enabled to use this app.",
+                    Snackbar.LENGTH_INDEFINITE
                 ).setAction(android.R.string.ok) {
                     checkDeviceLocationSettings()
                 }.show()
@@ -199,9 +232,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
         Log.d(TAG, "onRequestPermissionResult")
 
@@ -212,9 +245,9 @@ class MainActivity : AppCompatActivity() {
                     grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
                     PackageManager.PERMISSION_DENIED)) {
             Snackbar.make(
-                    findViewById(R.id.activivy_main_layout),
-                    "You need to allow location permissions all the time to use this app.",
-                    Snackbar.LENGTH_INDEFINITE
+                findViewById(R.id.activity_main_layout),
+                "You need to allow location permissions all the time to use this app.",
+                Snackbar.LENGTH_INDEFINITE
             )
                     .setAction("Settings") {
                         startActivity(Intent().apply {
@@ -230,6 +263,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun setHomeLocation() {
 
+    }
+
+    private fun testPlacesDialog() {
+        val autocompleteFragment =
+            supportFragmentManager.findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment?
+
+        autocompleteFragment!!.setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME))
+
+        autocompleteFragment.view?.visibility = View.VISIBLE;
+
+        autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+            override fun onPlaceSelected(place: Place) {
+                // TODO: Get info about the selected place.
+                Log.i(TAG, "Place: " + place.name + ", " + place.id)
+                autocompleteFragment.view?.visibility = View.GONE;
+            }
+
+            override fun onError(status: Status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: $status")
+            }
+        })
     }
 }
 

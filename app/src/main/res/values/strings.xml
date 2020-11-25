@@ -2,4 +2,5 @@
     <string name="app_name">Covid Reminders</string>
     <string name="extended_fab_label">Set home location</string>
     <string name="extended_fab_content_desc">Set home location extended floating action button</string>
+    <string name="api_key">AIzaSyDoOzn3gKVOVUTI_iiGK-cXDTD5oJKcC_0</string>
 </resources>
