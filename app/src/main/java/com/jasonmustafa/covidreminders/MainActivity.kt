@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -28,7 +27,6 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var geofencingClient: GeofencingClient
     private val runningQOrLater =
@@ -41,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     private val location0 = Location("")
     private lateinit var locations: Array<Location>
-    private lateinit var apiKey: String
+    private lateinit var placesApiKey: String
     private lateinit var placesClient: PlacesClient
 
     @SuppressLint("MissingPermission")
@@ -63,15 +61,11 @@ class MainActivity : AppCompatActivity() {
             testPlacesDialog()
         }
 
-        apiKey = getString(R.string.api_key)
+        placesApiKey = Secrets().getPlacesApiKey("com.jasonmustafa.covidreminders")
 
         if (!Places.isInitialized()) {
-            Places.initialize(applicationContext, apiKey)
+            Places.initialize(applicationContext, placesApiKey)
         }
-
-        println("api key:$apiKey")
-
-        // Create a new Places client instance.
 
         // Create a new Places client instance.
         placesClient = Places.createClient(this)
