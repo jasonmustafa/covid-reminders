@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Covid Reminders</string>
+    <string name="extended_fab_label">Set home location</string>
+    <string name="extended_fab_content_desc">Set home location extended floating action button</string>
 </resources>

@@ -10,13 +10,16 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import android.provider.Settings
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var geofencingClient: GeofencingClient
@@ -28,8 +31,6 @@ class MainActivity : AppCompatActivity() {
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-//    private val TAG = MainActivity::class.java.simpleName
-//    private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
     private val location0 = Location("")
     private lateinit var locations: Array<Location>
 
@@ -40,6 +41,17 @@ class MainActivity : AppCompatActivity() {
 
         geofencingClient = LocationServices.getGeofencingClient(this)
         createNotificationChannel(this)
+
+        val setHomeLocationFab = findViewById<ExtendedFloatingActionButton>(R.id.set_home_location_fab)
+
+        setHomeLocationFab.setOnClickListener {
+            // TODO: open dialog to set home location
+
+            println("fab clicked")
+
+            val dialog = SetHomeLocationDialogFragment()
+            dialog.show(supportFragmentManager, "test")
+        }
 
         // onCreate should end here
 
@@ -97,24 +109,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//    private fun requestPermissions() {
-//        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-//                this, Manifest.permission.ACCESS_FINE_LOCATION
-//        )
-//
-//        if (shouldProvideRationale) {
-//            Log.i(TAG, "Displaying permission rationale to provide additional context.")
-//        } else {
-//            Log.i(TAG, "Requesting permission")
-//
-//            ActivityCompat.requestPermissions(
-//                    this@MainActivity,
-//                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-//                    REQUEST_PERMISSIONS_REQUEST_CODE
-//            )
-//        }
-//    }
-
     /**
      * Determine whether the appropriate location permissions are granted.
      */
@@ -129,8 +123,8 @@ class MainActivity : AppCompatActivity() {
             if (runningQOrLater) {
                 PackageManager.PERMISSION_GRANTED ==
                         ActivityCompat.checkSelfPermission(
-                        this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
+                                this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        )
             } else {
                 true
             }
@@ -183,7 +177,7 @@ class MainActivity : AppCompatActivity() {
             if (exception is ResolvableApiException && resolve) {
                 try {
                     exception.startResolutionForResult(this@MainActivity,
-                    REQUEST_TURN_DEVICE_LOCATION_ON)
+                            REQUEST_TURN_DEVICE_LOCATION_ON)
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings: " + sendEx.message)
                 }
@@ -219,7 +213,8 @@ class MainActivity : AppCompatActivity() {
                     PackageManager.PERMISSION_DENIED)) {
             Snackbar.make(
                     findViewById(R.id.activivy_main_layout),
-                    "You need to allow location permissions all the time to use this app.", Snackbar.LENGTH_INDEFINITE
+                    "You need to allow location permissions all the time to use this app.",
+                    Snackbar.LENGTH_INDEFINITE
             )
                     .setAction("Settings") {
                         startActivity(Intent().apply {
@@ -231,6 +226,10 @@ class MainActivity : AppCompatActivity() {
         } else {
             checkDeviceLocationSettings()
         }
+    }
+
+    private fun setHomeLocation() {
+
     }
 }
 
