@@ -4,8 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
@@ -13,6 +15,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -23,10 +27,12 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
+/**
+ * Main activity of the application.
+ */
 class MainActivity : AppCompatActivity() {
     private lateinit var geofencingClient: GeofencingClient
     private val runningQOrLater =
@@ -37,11 +43,18 @@ class MainActivity : AppCompatActivity() {
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-    private val location0 = Location("")
     private lateinit var locations: Array<Location>
     private lateinit var placesApiKey: String
     private lateinit var placesClient: PlacesClient
 
+    private lateinit var homeLocationTextView: TextView
+    private lateinit var homeLatLngTextView: TextView
+
+    private lateinit var sharedPref: SharedPreferences
+
+    /**
+     * Called when the activity is starting.
+     */
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,16 +63,8 @@ class MainActivity : AppCompatActivity() {
         geofencingClient = LocationServices.getGeofencingClient(this)
         createNotificationChannel(this)
 
-        val setHomeLocationFab =
-            findViewById<ExtendedFloatingActionButton>(R.id.set_home_location_fab)
-
-        setHomeLocationFab.setOnClickListener {
-            // TODO: open dialog to set home location
-
-            println("fab clicked")
-
-            testPlacesDialog()
-        }
+        homeLocationTextView = findViewById<View>(R.id.homeLocationTextView) as TextView
+        homeLatLngTextView = findViewById<View>(R.id.homeLatLngTextView) as TextView
 
         placesApiKey = Secrets().getPlacesApiKey("com.jasonmustafa.covidreminders")
 
@@ -67,58 +72,42 @@ class MainActivity : AppCompatActivity() {
             Places.initialize(applicationContext, placesApiKey)
         }
 
-        // Create a new Places client instance.
         placesClient = Places.createClient(this)
 
+        // set values from sharedpreferences
+        sharedPref = applicationContext.getSharedPreferences(
+                "com.jasonmustafa.covidreminders.GEO_PREFS", Context.MODE_PRIVATE
+        ) ?: return
+
+        val loadedHomeName = sharedPref.getString("HOME_NAME_KEY", "NOT SET")
+        val loadedHomeLat: Float = sharedPref.getFloat("HOME_LAT_KEY", 0.0F)
+        val loadedHomeLng: Float = sharedPref.getFloat("HOME_LNG_KEY", 0.0F)
+
+        homeLocationTextView.text = loadedHomeName
+        homeLatLngTextView.text = "Coordinates: " + loadedHomeLat + ", " + loadedHomeLng
+
         val autocompleteFragment = supportFragmentManager
-            .findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment
-        autocompleteFragment.view!!.visibility = View.GONE
+                .findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment?
 
-        // TODO: onCreate should end here
+        autocompleteFragment!!
+                .setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
 
-        // golden gate bridge
-        location0.latitude = 37.8199
-        location0.longitude = -122.4783
-
-        println("added location")
-
-        locations = arrayOf(location0)
-
-        val geofences = locations.map {
-            Geofence.Builder()
-                    .setRequestId("home")
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setCircularRegion(location0.latitude, location0.longitude, 45F)
-                    .setTransitionTypes(
-                        Geofence.GEOFENCE_TRANSITION_ENTER
-                                or Geofence.GEOFENCE_TRANSITION_EXIT
-                    )
-                    .build()
-        }
-
-        val geofencingRequest = GeofencingRequest.Builder().apply {
-            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            addGeofences(geofences)
-        }.build()
-
-//        val geofencePendingIntent: PendingIntent by lazy {
-//            val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-//            PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-//        }
-
-//        val geofencingClient = LocationServices.getGeofencingClient(this)
-
-        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
-            addOnFailureListener {
-                println("failure")
+        autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+            override fun onPlaceSelected(place: Place) {
+                setHomeLocation(place)
             }
 
-            addOnSuccessListener {
-                println("success")
+            override fun onError(status: Status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: $status")
             }
-        }
+        })
     }
 
+    /**
+     * Called when activity is resumed after stopped, and is again being displayed to the user;
+     * called after onCreate.
+     */
     override fun onStart() {
         super.onStart()
         checkPermissions()
@@ -138,21 +127,21 @@ class MainActivity : AppCompatActivity() {
     @TargetApi(29)
     private fun foregroundAndBackgroundLocationPermissionGranted(): Boolean {
         val foregroundLocationGranted = (
-            PackageManager.PERMISSION_GRANTED
-                    == ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ))
+                PackageManager.PERMISSION_GRANTED
+                        == ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                ))
 
         val backgroundLocationGranted =
-            if (runningQOrLater) {
-                PackageManager.PERMISSION_GRANTED ==
-                        ActivityCompat.checkSelfPermission(
-                            this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                        )
-            } else {
-                true
-            }
+                if (runningQOrLater) {
+                    PackageManager.PERMISSION_GRANTED ==
+                            ActivityCompat.checkSelfPermission(
+                                    this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            )
+                } else {
+                    true
+                }
 
         return foregroundLocationGranted && backgroundLocationGranted
     }
@@ -173,16 +162,17 @@ class MainActivity : AppCompatActivity() {
             runningQOrLater -> {
                 permissions += Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            } else -> {
+            }
+            else -> {
                 REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
             }
         }
 
         Log.d(TAG, "Request location permissions")
         ActivityCompat.requestPermissions(
-            this@MainActivity,
-            permissions,
-            resultCode
+                this@MainActivity,
+                permissions,
+                resultCode
         )
     }
 
@@ -202,17 +192,17 @@ class MainActivity : AppCompatActivity() {
             if (exception is ResolvableApiException && resolve) {
                 try {
                     exception.startResolutionForResult(
-                        this@MainActivity,
-                        REQUEST_TURN_DEVICE_LOCATION_ON
+                            this@MainActivity,
+                            REQUEST_TURN_DEVICE_LOCATION_ON
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings: " + sendEx.message)
                 }
             } else {
                 Snackbar.make(
-                    findViewById(R.id.activity_main_layout),
-                    "Location services must be enabled to use this app.",
-                    Snackbar.LENGTH_INDEFINITE
+                        findViewById(R.id.activity_main_layout),
+                        "Location services must be enabled to use this app.",
+                        Snackbar.LENGTH_INDEFINITE
                 ).setAction(android.R.string.ok) {
                     checkDeviceLocationSettings()
                 }.show()
@@ -226,22 +216,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<out String>,
+            grantResults: IntArray
     ) {
         Log.d(TAG, "onRequestPermissionResult")
 
         if (
-            grantResults.isEmpty() ||
-                    grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-            (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                    PackageManager.PERMISSION_DENIED)) {
+                grantResults.isEmpty() ||
+                grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
+                (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                        grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
+                        PackageManager.PERMISSION_DENIED)) {
             Snackbar.make(
-                findViewById(R.id.activity_main_layout),
-                "You need to allow location permissions all the time to use this app.",
-                Snackbar.LENGTH_INDEFINITE
+                    findViewById(R.id.activity_main_layout),
+                    "You need to allow location permissions all the time to use this app.",
+                    Snackbar.LENGTH_INDEFINITE
             )
                     .setAction("Settings") {
                         startActivity(Intent().apply {
@@ -255,30 +245,108 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setHomeLocation() {
+    /**
+     * Set the home location of the user in SharedPreferences after a place is selected from the
+     * Google Places autocomplete widget.
+     *
+     * @param place place the user selected from the autocomplete widget
+     *
+     * @see SharedPreferences
+     * @see Places
+     */
+    private fun setHomeLocation(place: Place) {
+        removeGeofences()
 
+        Log.i(TAG, "Place: " + place.name + ", " + place.id)
+
+        var placeName: String
+        var placeId: String
+        var placeLat: Double
+        var placeLng: Double
+
+        with(sharedPref.edit()) {
+            placeName = place.name.toString()
+            placeId = place.id.toString()
+            placeLat = place.latLng!!.latitude
+            placeLng = place.latLng!!.longitude
+
+            putString("HOME_NAME_KEY", placeName)
+            putString("HOME_ID_KEY", placeId)
+            putFloat("HOME_LAT_KEY", placeLat.toFloat())
+            putFloat("HOME_LNG_KEY", placeLng.toFloat())
+
+            apply()
+        }
+
+        homeLocationTextView.text = place.name
+        homeLatLngTextView.text = "Coordinates: " + placeLat + "," + placeLng
+
+        addGeofence(placeLat, placeLng)
     }
 
-    private fun testPlacesDialog() {
-        val autocompleteFragment =
-            supportFragmentManager.findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment?
+    @SuppressLint("MissingPermission")
+    private fun addGeofence(lat: Double, lng: Double) {
+        val location0 = Location("")
 
-        autocompleteFragment!!.setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME))
+        location0.latitude = lat
+        location0.longitude = lng
 
-        autocompleteFragment.view?.visibility = View.VISIBLE;
+        println("added location")
 
-        autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-            override fun onPlaceSelected(place: Place) {
-                // TODO: Get info about the selected place.
-                Log.i(TAG, "Place: " + place.name + ", " + place.id)
-                autocompleteFragment.view?.visibility = View.GONE;
+        locations = arrayOf(location0)
+
+        val geofences = locations.map {
+            Geofence.Builder()
+                    .setRequestId("home")
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setCircularRegion(location0.latitude, location0.longitude, 45F)
+                    .setTransitionTypes(
+                            Geofence.GEOFENCE_TRANSITION_ENTER
+                                    or Geofence.GEOFENCE_TRANSITION_EXIT
+                    )
+                    .build()
+        }
+
+        val geofencingRequest = GeofencingRequest.Builder().apply {
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            addGeofences(geofences)
+        }.build()
+
+        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
+            addOnFailureListener {
+                println("failure")
             }
 
-            override fun onError(status: Status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: $status")
+            addOnSuccessListener {
+                println("success")
+
+                with(sharedPref.edit()) {
+                    putBoolean("GEOFENCE_IS_ACTIVE_KEY", true)
+                    apply()
+                }
             }
-        })
+        }
+    }
+
+    /**
+     * Remove all created geofences currently stored in the Geofencing client.
+     */
+    private fun removeGeofences() {
+        if (!foregroundAndBackgroundLocationPermissionGranted()) {
+            return
+        }
+
+        geofencingClient.removeGeofences(geofencePendingIntent)?.run {
+            addOnSuccessListener {
+                Log.d(TAG, "Geofences removed")
+                Toast.makeText(applicationContext, "Geofences removed", Toast.LENGTH_SHORT)
+                        .show()
+            }
+            addOnFailureListener {
+                // Failed to remove geofences
+                Log.d(TAG, "Failed to remove geofences")
+            }
+        }
     }
 }
 

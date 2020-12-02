@@ -31,5 +31,6 @@ fun createNotificationChannel(context: Context) {
 }
 
 private const val NOTIFICATION_ID = 33
+
 //private const val CHANNEL_ID = "GeofenceChannel"
 private const val CHANNEL_ID = "channel_01"
