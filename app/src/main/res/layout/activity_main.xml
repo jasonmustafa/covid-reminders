@@ -10,11 +10,14 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerInParent="false"
+        android:layout_centerHorizontal="false"
+        android:layout_centerVertical="false"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/autocomplete_fragment">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/homeLocationTextView"
@@ -27,8 +30,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Coordinates: NOT SET" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/removeHomeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Remove Home" />
+
+            <Button
+                android:id="@+id/setHomeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="launchPlacesAutocompleteIntent"
+                android:text="Set Home" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!--
     <fragment
         android:id="@+id/autocomplete_fragment"
         android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
@@ -36,28 +60,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="0dp" />
-
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <Button
-            android:id="@+id/removeHomeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Remove Home" />
-
-        <Button
-            android:id="@+id/setHomeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Set Home" />
-    </LinearLayout>
+        -->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

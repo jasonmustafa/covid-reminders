@@ -3,6 +3,7 @@ package com.jasonmustafa.covidreminders
 import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
+import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -15,20 +16,22 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
+
 
 /**
  * Main activity of the application.
@@ -52,6 +55,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var sharedPref: SharedPreferences
 
+    private lateinit var setHomeButton: Button
+
+    private val autocompleteRequestCode = 1
+
     /**
      * Called when the activity is starting.
      */
@@ -74,7 +81,6 @@ class MainActivity : AppCompatActivity() {
 
         placesClient = Places.createClient(this)
 
-        // set values from sharedpreferences
         sharedPref = applicationContext.getSharedPreferences(
                 "com.jasonmustafa.covidreminders.GEO_PREFS", Context.MODE_PRIVATE
         ) ?: return
@@ -86,22 +92,11 @@ class MainActivity : AppCompatActivity() {
         homeLocationTextView.text = loadedHomeName
         homeLatLngTextView.text = "Coordinates: " + loadedHomeLat + ", " + loadedHomeLng
 
-        val autocompleteFragment = supportFragmentManager
-                .findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment?
+        setHomeButton = findViewById(R.id.setHomeButton)
 
-        autocompleteFragment!!
-                .setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
-
-        autocompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
-            override fun onPlaceSelected(place: Place) {
-                setHomeLocation(place)
-            }
-
-            override fun onError(status: Status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: $status")
-            }
-        })
+        setHomeButton.setOnClickListener{
+            launchPlacesAutocompleteIntent()
+        }
     }
 
     /**
@@ -249,7 +244,7 @@ class MainActivity : AppCompatActivity() {
      * Set the home location of the user in SharedPreferences after a place is selected from the
      * Google Places autocomplete widget.
      *
-     * @param place place the user selected from the autocomplete widget
+     * @param place location the user selected from the autocomplete widget
      *
      * @see SharedPreferences
      * @see Places
@@ -280,6 +275,8 @@ class MainActivity : AppCompatActivity() {
 
         homeLocationTextView.text = place.name
         homeLatLngTextView.text = "Coordinates: " + placeLat + "," + placeLng
+
+        println("lat: $placeLat, lng: $placeLng")
 
         addGeofence(placeLat, placeLng)
     }
@@ -314,11 +311,11 @@ class MainActivity : AppCompatActivity() {
 
         geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
             addOnFailureListener {
-                println("failure")
+                println("failure adding geofence")
             }
 
             addOnSuccessListener {
-                println("success")
+                println("added geofence successfully")
 
                 with(sharedPref.edit()) {
                     putBoolean("GEOFENCE_IS_ACTIVE_KEY", true)
@@ -347,6 +344,46 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Failed to remove geofences")
             }
         }
+    }
+
+    private fun launchPlacesAutocompleteIntent() {
+        val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
+
+        val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                .build(this)
+
+        startActivityForResult(intent, autocompleteRequestCode)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == autocompleteRequestCode) {
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    data?.let {
+                        val place = Autocomplete.getPlaceFromIntent(data)
+                        Log.i(TAG, "Place: ${place.name}, ${place.id}")
+
+                        setHomeLocation(place)
+                    }
+                }
+
+                AutocompleteActivity.RESULT_ERROR -> {
+                    // TODO: Handle the error.
+                    data?.let {
+                        val status = Autocomplete.getStatusFromIntent(data)
+                        Log.i(TAG, status.statusMessage.toString())
+                    }
+                }
+
+                Activity.RESULT_CANCELED -> {
+                    // The user canceled the operation.
+                }
+            }
+
+            return
+        }
+
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }
 
