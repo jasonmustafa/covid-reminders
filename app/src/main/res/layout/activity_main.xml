@@ -36,6 +36,14 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/homeLocationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:text="Home: NOT SET" />
+
+            <TextView
                 android:id="@+id/homeLatLngTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -43,13 +51,6 @@
                 android:layout_margin="10dp"
                 android:text="Coordinates: NOT SET" />
 
-            <TextView
-                android:id="@+id/homeLocationTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="10dp"
-                android:text="Current location: NOT SET" />
         </LinearLayout>
 
         <LinearLayout
@@ -64,6 +65,7 @@
                 android:id="@+id/removeHomeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginStart="40dp"
                 android:layout_marginLeft="40dp"
                 android:layout_marginTop="10dp"
@@ -77,6 +79,7 @@
                 android:id="@+id/setHomeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginStart="10dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginTop="10dp"

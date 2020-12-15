@@ -32,14 +32,13 @@ import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
-
 /**
  * Main activity of the application.
  */
 class MainActivity : AppCompatActivity() {
     private lateinit var geofencingClient: GeofencingClient
     private val runningQOrLater =
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
 
     private val geofencePendingIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
@@ -56,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPref: SharedPreferences
 
     private lateinit var setHomeButton: Button
+    private lateinit var removeHomeButton: Button
 
     private val autocompleteRequestCode = 1
 
@@ -82,20 +82,44 @@ class MainActivity : AppCompatActivity() {
         placesClient = Places.createClient(this)
 
         sharedPref = applicationContext.getSharedPreferences(
-                "com.jasonmustafa.covidreminders.GEO_PREFS", Context.MODE_PRIVATE
+            "com.jasonmustafa.covidreminders.GEO_PREFS", Context.MODE_PRIVATE
         ) ?: return
 
-        val loadedHomeName = sharedPref.getString("HOME_NAME_KEY", "NOT SET")
+        val loadedHomeName = sharedPref.getString("HOME_NAME_KEY", "Home: NOT SET")
         val loadedHomeLat: Float = sharedPref.getFloat("HOME_LAT_KEY", 0.0F)
         val loadedHomeLng: Float = sharedPref.getFloat("HOME_LNG_KEY", 0.0F)
 
         homeLocationTextView.text = loadedHomeName
-        homeLatLngTextView.text = "Coordinates: " + loadedHomeLat + ", " + loadedHomeLng
+
+        if (loadedHomeLat != 0.0F && loadedHomeLng != 0.0F) {
+            homeLatLngTextView.text = "Coordinates: " + loadedHomeLat + ", " + loadedHomeLng
+        } else {
+            homeLatLngTextView.text = "Coordinates: NOT SET"
+        }
 
         setHomeButton = findViewById(R.id.setHomeButton)
+        removeHomeButton = findViewById(R.id.removeHomeButton)
 
-        setHomeButton.setOnClickListener{
+        setHomeButton.setOnClickListener {
             launchPlacesAutocompleteIntent()
+        }
+
+        removeHomeButton.setOnClickListener {
+            removeGeofences()
+
+            with(sharedPref.edit()) {
+                putString("HOME_NAME_KEY", null)
+                putString("HOME_ID_KEY", null)
+                putFloat("HOME_LAT_KEY", 0.0F)
+                putFloat("HOME_LNG_KEY", 0.0F)
+
+                apply()
+            }
+
+            homeLocationTextView.text = "Home: NOT SET"
+            homeLatLngTextView.text = "Coordinates: NOT SET"
+
+            Toast.makeText(applicationContext, "Home location removed", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -124,19 +148,19 @@ class MainActivity : AppCompatActivity() {
         val foregroundLocationGranted = (
                 PackageManager.PERMISSION_GRANTED
                         == ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
                 ))
 
         val backgroundLocationGranted =
-                if (runningQOrLater) {
-                    PackageManager.PERMISSION_GRANTED ==
-                            ActivityCompat.checkSelfPermission(
-                                    this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                            )
-                } else {
-                    true
-                }
+            if (runningQOrLater) {
+                PackageManager.PERMISSION_GRANTED ==
+                        ActivityCompat.checkSelfPermission(
+                            this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        )
+            } else {
+                true
+            }
 
         return foregroundLocationGranted && backgroundLocationGranted
     }
@@ -165,9 +189,9 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(TAG, "Request location permissions")
         ActivityCompat.requestPermissions(
-                this@MainActivity,
-                permissions,
-                resultCode
+            this@MainActivity,
+            permissions,
+            resultCode
         )
     }
 
@@ -177,27 +201,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         val locationRequestBuilder =
-                LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+            LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
 
         val settingsClient = LocationServices.getSettingsClient(this)
         val locationSettingsResponseTask =
-                settingsClient.checkLocationSettings(locationRequestBuilder.build())
+            settingsClient.checkLocationSettings(locationRequestBuilder.build())
 
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
                     exception.startResolutionForResult(
-                            this@MainActivity,
-                            REQUEST_TURN_DEVICE_LOCATION_ON
+                        this@MainActivity,
+                        REQUEST_TURN_DEVICE_LOCATION_ON
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings: " + sendEx.message)
                 }
             } else {
                 Snackbar.make(
-                        findViewById(R.id.activity_main_layout),
-                        "Location services must be enabled to use this app.",
-                        Snackbar.LENGTH_INDEFINITE
+                    findViewById(R.id.activity_main_layout),
+                    "Location services must be enabled to use this app.",
+                    Snackbar.LENGTH_INDEFINITE
                 ).setAction(android.R.string.ok) {
                     checkDeviceLocationSettings()
                 }.show()
@@ -211,30 +235,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
         Log.d(TAG, "onRequestPermissionResult")
 
         if (
-                grantResults.isEmpty() ||
-                grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-                (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                        grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                        PackageManager.PERMISSION_DENIED)) {
+            grantResults.isEmpty() ||
+            grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
+            (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
+                    PackageManager.PERMISSION_DENIED)
+        ) {
             Snackbar.make(
-                    findViewById(R.id.activity_main_layout),
-                    "You need to allow location permissions all the time to use this app.",
-                    Snackbar.LENGTH_INDEFINITE
+                findViewById(R.id.activity_main_layout),
+                "You need to allow location permissions all the time to use this app.",
+                Snackbar.LENGTH_INDEFINITE
             )
-                    .setAction("Settings") {
-                        startActivity(Intent().apply {
-                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        })
-                    }.show()
+                .setAction("Settings") {
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
         } else {
             checkDeviceLocationSettings()
         }
@@ -294,14 +319,14 @@ class MainActivity : AppCompatActivity() {
 
         val geofences = locations.map {
             Geofence.Builder()
-                    .setRequestId("home")
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setCircularRegion(location0.latitude, location0.longitude, 45F)
-                    .setTransitionTypes(
-                            Geofence.GEOFENCE_TRANSITION_ENTER
-                                    or Geofence.GEOFENCE_TRANSITION_EXIT
-                    )
-                    .build()
+                .setRequestId("home")
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setCircularRegion(location0.latitude, location0.longitude, 45F)
+                .setTransitionTypes(
+                    Geofence.GEOFENCE_TRANSITION_ENTER
+                            or Geofence.GEOFENCE_TRANSITION_EXIT
+                )
+                .build()
         }
 
         val geofencingRequest = GeofencingRequest.Builder().apply {
@@ -323,6 +348,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        Toast.makeText(applicationContext, "Home location added", Toast.LENGTH_SHORT).show()
     }
 
     /**
@@ -336,8 +363,6 @@ class MainActivity : AppCompatActivity() {
         geofencingClient.removeGeofences(geofencePendingIntent)?.run {
             addOnSuccessListener {
                 Log.d(TAG, "Geofences removed")
-                Toast.makeText(applicationContext, "Geofences removed", Toast.LENGTH_SHORT)
-                        .show()
             }
             addOnFailureListener {
                 // Failed to remove geofences
@@ -350,7 +375,7 @@ class MainActivity : AppCompatActivity() {
         val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
 
         val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                .build(this)
+            .build(this)
 
         startActivityForResult(intent, autocompleteRequestCode)
     }

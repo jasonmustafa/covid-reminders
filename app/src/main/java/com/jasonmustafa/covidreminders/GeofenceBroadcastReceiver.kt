@@ -23,10 +23,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 val geofence = it.requestId
 
                 val builder = NotificationCompat.Builder(context!!, "channel_01")
-                        .setSmallIcon(R.drawable.ic_launcher_foreground)
-                        .setContentTitle("Test Title")
-                        .setContentText("test content")
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentTitle("Test Title")
+                    .setContentText("test content")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
                 with(NotificationManagerCompat.from(context)) {
                     notify(notificationId, builder.build())

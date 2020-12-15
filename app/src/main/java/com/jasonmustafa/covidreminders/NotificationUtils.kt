@@ -12,10 +12,10 @@ import android.os.Build
 fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val notificationChannel = NotificationChannel(
-                CHANNEL_ID,
-                //"GeofenceStatus",
-                "channel_01",
-                NotificationManager.IMPORTANCE_HIGH
+            CHANNEL_ID,
+            //"GeofenceStatus",
+            "channel_01",
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setShowBadge(true)
         }
