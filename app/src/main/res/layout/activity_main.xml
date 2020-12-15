@@ -8,8 +8,8 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_centerInParent="false"
         android:layout_centerHorizontal="false"
         android:layout_centerVertical="false"
@@ -19,35 +19,71 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/homeLocationTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Current location: NOT SET" />
-
-        <TextView
-            android:id="@+id/homeLatLngTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Coordinates: NOT SET" />
+        <ImageView
+            android:id="@+id/maskImageView"
+            android:layout_width="250dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="5"
+            app:srcCompat="@drawable/mask" />
 
         <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/homeLatLngTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:text="Coordinates: NOT SET" />
+
+            <TextView
+                android:id="@+id/homeLocationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:text="Current location: NOT SET" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="center"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/removeHomeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:layout_marginLeft="40dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="1"
                 android:text="Remove Home" />
 
             <Button
                 android:id="@+id/setHomeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="launchPlacesAutocompleteIntent"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="40dp"
+                android:layout_marginRight="40dp"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="1"
                 android:text="Set Home" />
         </LinearLayout>
     </LinearLayout>
