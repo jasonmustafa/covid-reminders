@@ -45,15 +45,13 @@ class MainActivity : AppCompatActivity() {
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
+    private lateinit var sharedPref: SharedPreferences
     private lateinit var locations: Array<Location>
     private lateinit var placesApiKey: String
     private lateinit var placesClient: PlacesClient
 
     private lateinit var homeLocationTextView: TextView
     private lateinit var homeLatLngTextView: TextView
-
-    private lateinit var sharedPref: SharedPreferences
-
     private lateinit var setHomeButton: Button
     private lateinit var removeHomeButton: Button
 
@@ -299,7 +297,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         homeLocationTextView.text = place.name
-        homeLatLngTextView.text = "Coordinates: " + placeLat + "," + placeLng
+        homeLatLngTextView.text = "Coordinates: " + placeLat + ", " + placeLng
 
         println("lat: $placeLat, lng: $placeLng")
 
@@ -349,7 +347,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Toast.makeText(applicationContext, "Home location added", Toast.LENGTH_SHORT).show()
+        Toast.makeText(applicationContext, "Home location set", Toast.LENGTH_SHORT).show()
     }
 
     /**

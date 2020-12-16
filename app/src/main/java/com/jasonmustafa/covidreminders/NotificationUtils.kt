@@ -11,26 +11,36 @@ import android.os.Build
  */
 fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val notificationChannel = NotificationChannel(
-            CHANNEL_ID,
-            //"GeofenceStatus",
-            "channel_01",
+        val washHandsNotificationChannel = NotificationChannel(
+            WASH_HANDS_CHANNEL_ID,
+            "Wash Hands Reminders",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setShowBadge(true)
         }
 
-        notificationChannel.enableLights(true)
-        notificationChannel.lightColor = Color.BLUE
-        notificationChannel.enableVibration(true)
-        notificationChannel.description = "Notification description"
+        washHandsNotificationChannel.enableLights(true)
+        washHandsNotificationChannel.lightColor = Color.BLUE
+        washHandsNotificationChannel.enableVibration(true)
+        washHandsNotificationChannel.description = "Reminders for washing hands and wearing masks."
+
+        val wearMaskNotificationChannel = NotificationChannel(
+            WEAR_MASK_CHANNEL_ID,
+            "Wear Mask Reminders",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setShowBadge(true)
+        }
+
+        wearMaskNotificationChannel.enableLights(true)
+        wearMaskNotificationChannel.lightColor = Color.BLUE
+        wearMaskNotificationChannel.enableVibration(true)
+        wearMaskNotificationChannel.description = "Reminders for washing hands and wearing masks."
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(notificationChannel)
+        notificationManager.createNotificationChannels(listOf(washHandsNotificationChannel, wearMaskNotificationChannel))
     }
 }
 
-private const val NOTIFICATION_ID = 33
-
-//private const val CHANNEL_ID = "GeofenceChannel"
-private const val CHANNEL_ID = "channel_01"
+private const val WASH_HANDS_CHANNEL_ID = "WashHandsChannel"
+private const val WEAR_MASK_CHANNEL_ID = "WearMaskChannel"
