@@ -25,13 +25,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         val geofenceTransition = geofencingEvent.geofenceTransition
 
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            // Send notification and log the transition details.
             val notificationBuilder = NotificationCompat.Builder(context!!, "WashHandsChannel")
                 .setSmallIcon(R.drawable.mask)
                 .setContentTitle("Wash your hands - you're home!")
                 .setContentText("Wash with soap for at least 20 seconds. Swipe me away when you've finished.")
-                .setStyle(NotificationCompat.BigTextStyle()
-                    .bigText("Wash with soap for at least 20 seconds. Swipe me away when you've finished."))
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("Wash with soap for at least 20 seconds. Swipe me away when you've finished.")
+                )
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
             with(NotificationManagerCompat.from(context)) {
@@ -42,29 +43,16 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 .setSmallIcon(R.drawable.mask)
                 .setContentTitle("Wear a mask - you're heading out!")
                 .setContentText("Cover your mouth and nose while outside. Swipe me away if you have a mask.")
-                .setStyle(NotificationCompat.BigTextStyle()
-                    .bigText("Cover your mouth and nose while outside. Swipe me away if you have a mask."))
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("Cover your mouth and nose while outside. Swipe me away if you have a mask.")
+                )
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
             with(NotificationManagerCompat.from(context)) {
                 notify(WEAR_MASK_NOTIFICATION_ID, notificationBuilder.build())
             }
         }
-
-
-//        geofencingEvent.triggeringGeofences.forEach {
-//            val geofence = it.requestId
-//
-//            val notificationBuilder = NotificationCompat.Builder(context!!, "GeofenceChannel")
-//                .setSmallIcon(R.drawable.ic_launcher_foreground)
-//                .setContentTitle("Remember to wash your hands!")
-//                .setContentText("Wash em!")
-//                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//
-//            with(NotificationManagerCompat.from(context)) {
-//                notify(NOTIFICATION_ID, notificationBuilder.build())
-//            }
-//        }
     }
 }
 

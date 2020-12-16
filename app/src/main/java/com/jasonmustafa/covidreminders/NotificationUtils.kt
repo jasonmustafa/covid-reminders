@@ -38,7 +38,12 @@ fun createNotificationChannel(context: Context) {
         wearMaskNotificationChannel.description = "Reminders for washing hands and wearing masks."
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannels(listOf(washHandsNotificationChannel, wearMaskNotificationChannel))
+        notificationManager.createNotificationChannels(
+            listOf(
+                washHandsNotificationChannel,
+                wearMaskNotificationChannel
+            )
+        )
     }
 }
 
