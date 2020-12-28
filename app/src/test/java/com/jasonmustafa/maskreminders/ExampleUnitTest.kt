@@ -1,4 +1,4 @@
-package com.jasonmustafa.covidreminders
+package com.jasonmustafa.maskreminders
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

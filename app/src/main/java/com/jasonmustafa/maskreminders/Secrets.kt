@@ -1,4 +1,4 @@
-package com.jasonmustafa.covidreminders
+package com.jasonmustafa.maskreminders
 
 class Secrets {
 
@@ -11,5 +11,5 @@ class Secrets {
         }
     }
 
-    external fun getPlacesApiKey(packageName: String): String
+    external fun getPlacesAutocompleteAndroidApiKey(packageName: String): String
 }

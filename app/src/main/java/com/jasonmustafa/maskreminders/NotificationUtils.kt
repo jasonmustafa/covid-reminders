@@ -1,4 +1,4 @@
-package com.jasonmustafa.covidreminders
+package com.jasonmustafa.maskreminders
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.os.Build
 
 /**
- * Create a notification channel for Covid reminders on start of the application.
+ * Create a notification channel for Mask Reminders on start of the application.
  */
 fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -1,4 +1,4 @@
-package com.jasonmustafa.covidreminders
+package com.jasonmustafa.maskreminders
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         homeLocationTextView = findViewById<View>(R.id.homeLocationTextView) as TextView
         homeLatLngTextView = findViewById<View>(R.id.homeLatLngTextView) as TextView
 
-        placesApiKey = Secrets().getPlacesApiKey("com.jasonmustafa.covidreminders")
+        placesApiKey = Secrets().getPlacesAutocompleteAndroidApiKey("com.jasonmustafa.maskreminders")
 
         if (!Places.isInitialized()) {
             Places.initialize(applicationContext, placesApiKey)
@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         placesClient = Places.createClient(this)
 
         sharedPref = applicationContext.getSharedPreferences(
-            "com.jasonmustafa.covidreminders.GEO_PREFS", Context.MODE_PRIVATE
+            "com.jasonmustafa.maskreminders.GEO_PREFS", Context.MODE_PRIVATE
         ) ?: return
 
         val loadedHomeName = sharedPref.getString("HOME_NAME_KEY", "Home: NOT SET")

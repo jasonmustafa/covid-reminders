@@ -1,4 +1,4 @@
-package com.jasonmustafa.covidreminders
+package com.jasonmustafa.maskreminders
 
 import android.content.BroadcastReceiver
 import android.content.Context
