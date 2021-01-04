@@ -12,9 +12,9 @@ import android.os.Build
 fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val washHandsNotificationChannel = NotificationChannel(
-            WASH_HANDS_CHANNEL_ID,
-            "Wash Hands Reminders",
-            NotificationManager.IMPORTANCE_HIGH
+                WASH_HANDS_CHANNEL_ID,
+                "Wash Hands Reminders",
+                NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setShowBadge(true)
         }
@@ -25,9 +25,9 @@ fun createNotificationChannel(context: Context) {
         washHandsNotificationChannel.description = "Reminders for washing hands and wearing masks."
 
         val wearMaskNotificationChannel = NotificationChannel(
-            WEAR_MASK_CHANNEL_ID,
-            "Wear Mask Reminders",
-            NotificationManager.IMPORTANCE_HIGH
+                WEAR_MASK_CHANNEL_ID,
+                "Wear Mask Reminders",
+                NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setShowBadge(true)
         }
@@ -39,10 +39,10 @@ fun createNotificationChannel(context: Context) {
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannels(
-            listOf(
-                washHandsNotificationChannel,
-                wearMaskNotificationChannel
-            )
+                listOf(
+                        washHandsNotificationChannel,
+                        wearMaskNotificationChannel
+                )
         )
     }
 }
